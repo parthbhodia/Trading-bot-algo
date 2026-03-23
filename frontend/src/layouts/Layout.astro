@@ -1,0 +1,23 @@
+---
+import '../styles/globals.css';
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="description" content="Modern stock analysis platform with real-time portfolio tracking" />
+		<title>{title}</title>
+	</head>
+	<body class="bg-zinc-950 text-white min-h-screen">
+		<div class="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+			<slot />
+		</div>
+	</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd /d backend && venv\\Scripts\\uvicorn app.main:app --reload --host 0.0.0.0 --port 8001"],
+      "port": 8001
+    },
+    {
+      "name": "frontend",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd /d frontend && npm run dev -- --port 4322 --host 0.0.0.0"],
+      "port": 4322
+    }
+  ]
+}
