@@ -4,7 +4,9 @@ import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
   integrations: [react(), tailwind()],
-  output: 'server',
+  output: 'static',
+  site: 'https://parthbhodia.github.io',
+  base: '/Trading-bot-algo',
   vite: {
     define: {
       global: 'globalThis',

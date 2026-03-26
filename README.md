@@ -53,7 +53,15 @@ stock-analysis-platform-v2/
 └── README.md
 ```
 
+## Deployment
+
+| Layer | Platform | URL |
+|-------|----------|-----|
+| Backend | Railway | `https://trading-bot-algo.up.railway.app` |
+| Frontend | GitHub Pages | `https://parthbhodia.github.io/Trading-bot-algo/` |
+| Database | Supabase | Managed PostgreSQL |
+
 ## Development
 
 - Frontend: `npm run dev` (port 4321)
-- Backend: `uvicorn main:app --reload` (port 8000)
+- Backend: `uvicorn app.main:app --reload` (port 8000)
