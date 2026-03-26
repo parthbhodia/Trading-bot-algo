@@ -16,32 +16,32 @@ const PERIODS = [
 const CustomTooltip = ({ active, payload, label, unit }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs shadow-xl">
-      <p className="text-zinc-400 mb-1">{label}</p>
-      <p className="text-white font-semibold">{payload[0].value.toFixed(2)} {unit}</p>
+    <div className=`bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs shadow-xl`>
+      <p className=`text-zinc-400 mb-1`>{label}</p>
+      <p className=`text-white font-semibold`>{payload[0].value.toFixed(2)} {unit}</p>
     </div>
   );
 };
 
 const MiniChart = ({ data, color, unit, loading }) => {
   if (loading) {
-    return <div className="h-32 flex items-center justify-center">
-      <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: `${color}33`, borderTopColor: color }} />
+    return <div className=`h-32 flex items-center justify-center`>
+      <div className=`w-5 h-5 border-2 rounded-full animate-spin` style={{ borderColor: `${color}33`, borderTopColor: color }} />
     </div>;
   }
   if (!data?.length) {
-    return <div className="h-32 flex items-center justify-center text-zinc-600 text-xs">No data</div>;
+    return <div className=`h-32 flex items-center justify-center text-zinc-600 text-xs`>No data</div>;
   }
 
   // Show every ~10th label to avoid crowding
   const tickInterval = Math.floor(data.length / 5);
 
   return (
-    <ResponsiveContainer width="100%" height={128}>
+    <ResponsiveContainer width=`100%` height={128}>
       <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+        <CartesianGrid strokeDasharray=`3 3` stroke=`#27272a` />
         <XAxis
-          dataKey="date"
+          dataKey=`date`
           tick={{ fill: '#71717a', fontSize: 9 }}
           tickLine={false}
           interval={tickInterval}
@@ -58,8 +58,8 @@ const MiniChart = ({ data, color, unit, loading }) => {
         />
         <Tooltip content={<CustomTooltip unit={unit} />} />
         <Line
-          type="monotone"
-          dataKey="price"
+          type=`monotone`
+          dataKey=`price`
           stroke={color}
           strokeWidth={1.5}
           dot={false}
@@ -120,8 +120,8 @@ const MacroCharts = () => {
   return (
     <div>
       {/* Period selector + refresh */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-1">
+      <div className=`flex items-center justify-between mb-4`>
+        <div className=`flex gap-1`>
           {PERIODS.map(p => (
             <button
               key={p.value}
@@ -139,50 +139,50 @@ const MacroCharts = () => {
         <button
           onClick={fetchData}
           disabled={loading}
-          className="text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-40"
+          className=`text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-40`
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
       {error ? (
-        <div className="text-center py-8 text-zinc-500 text-sm">
+        <div className=`text-center py-8 text-zinc-500 text-sm`>
           <p>{error}</p>
-          <button onClick={fetchData} className="mt-2 text-xs text-blue-400 hover:text-blue-300">Retry</button>
+          <button onClick={fetchData} className=`mt-2 text-xs text-blue-400 hover:text-blue-300`>Retry</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className=`grid grid-cols-1 md:grid-cols-2 gap-6`>
           {cards.map(({ key, color, icon, label }) => {
             const d = macroData?.[key];
             return (
-              <div key={key} className="bg-zinc-800/30 rounded-xl p-4 border border-zinc-800">
+              <div key={key} className=`bg-zinc-800/30 rounded-xl p-4 border border-zinc-800`>
                 {/* Header */}
-                <div className="flex items-start justify-between mb-3">
+                <div className=`flex items-start justify-between mb-3`>
                   <div>
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-base">{icon}</span>
-                      <span className="text-zinc-300 text-sm font-medium">{label}</span>
+                    <div className=`flex items-center gap-1.5 mb-0.5`>
+                      <span className=`text-base`>{icon}</span>
+                      <span className=`text-zinc-300 text-sm font-medium`>{label}</span>
                     </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-white">
+                    <div className=`flex items-baseline gap-2`>
+                      <span className=`text-2xl font-bold text-white`>
                         {d?.current != null
                           ? (key === 'oil' ? `$${d.current.toFixed(2)}` : d.current.toFixed(2))
                           : '—'}
                       </span>
-                      <span className="text-zinc-500 text-xs">{d?.unit}</span>
+                      <span className=`text-zinc-500 text-xs`>{d?.unit}</span>
                     </div>
                   </div>
-                  <div className="text-right space-y-0.5">
-                    <div className="flex items-center gap-1 justify-end">
-                      <span className="text-zinc-600 text-xs">1d</span>
+                  <div className=`text-right space-y-0.5`>
+                    <div className=`flex items-center gap-1 justify-end`>
+                      <span className=`text-zinc-600 text-xs`>1d</span>
                       <PctBadge val={d?.change_pct} />
                     </div>
-                    <div className="flex items-center gap-1 justify-end">
-                      <span className="text-zinc-600 text-xs">1w</span>
+                    <div className=`flex items-center gap-1 justify-end`>
+                      <span className=`text-zinc-600 text-xs`>1w</span>
                       <PctBadge val={d?.week_chg} />
                     </div>
-                    <div className="flex items-center gap-1 justify-end">
-                      <span className="text-zinc-600 text-xs">1m</span>
+                    <div className=`flex items-center gap-1 justify-end`>
+                      <span className=`text-zinc-600 text-xs`>1m</span>
                       <PctBadge val={d?.month_chg} />
                     </div>
                   </div>
