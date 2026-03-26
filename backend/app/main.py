@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -15,6 +15,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import asyncio
+import sqlite3
+import time
 
 load_dotenv()
 
@@ -2553,6 +2555,486 @@ async def get_macro_data(period: str = "6mo"):
             print(f"[WARN] macro-data {key}: {e}")
             result[key] = {**meta, "error": str(e), "series": [], "current": None, "change_pct": 0}
     return result
+
+
+@app.get("/api/trump-analysis")
+async def get_trump_analysis():
+    """
+    Fetches recent Trump / tariff / market news from NewsAPI, runs Grok/Groq
+    analysis, and returns a structured SPY impact assessment.
+    Cached for 15 minutes to avoid hammering the LLM API.
+    """
+    NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
+    if not NEWS_API_KEY:
+        raise HTTPException(status_code=503, detail="NEWS_API_KEY not configured")
+
+    # Check 15-minute cache
+    cache_file = "trump_analysis_cache.json"
+    try:
+        if os.path.exists(cache_file):
+            with open(cache_file) as f:
+                cached = json.load(f)
+            age = (datetime.utcnow() - datetime.fromisoformat(cached["fetched_at"])).total_seconds()
+            if age < 900:  # 15 min
+                return cached
+    except Exception:
+        pass
+
+    queries = [
+        "Trump tariff market",
+        "Trump trade economy stocks",
+        "Trump Federal Reserve SPY",
+    ]
+    headlines = []
+    articles = []
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        for q in queries:
+            try:
+                r = await client.get(
+                    "https://newsapi.org/v2/everything",
+                    params={"q": q, "sortBy": "publishedAt", "pageSize": 5,
+                            "language": "en", "apiKey": NEWS_API_KEY},
+                )
+                if r.status_code == 200:
+                    for art in r.json().get("articles", []):
+                        title = (art.get("title") or "").strip()
+                        if title and title not in headlines:
+                            headlines.append(title)
+                            articles.append({
+                                "title": title,
+                                "url": art.get("url", ""),
+                                "source": (art.get("source") or {}).get("name", ""),
+                                "published_at": (art.get("publishedAt") or "")[:10],
+                            })
+            except Exception as e:
+                print(f"[WARN] trump-analysis NewsAPI query '{q}': {e}")
+
+    if not headlines:
+        raise HTTPException(status_code=503, detail="No news articles found")
+
+    prompt = (
+        "You are a quantitative market analyst. Here are recent news headlines about Trump, tariffs, and the economy:\n\n"
+        + "\n".join(f"- {h}" for h in headlines[:15])
+        + "\n\nAnalyse the likely impact on SPY (S&P 500 ETF) in the short term (next 1-5 days).\n"
+        "Respond with ONLY valid JSON, no markdown:\n"
+        '{"sentiment":"bullish"|"bearish"|"mixed",'
+        '"spy_impact":"positive"|"negative"|"neutral",'
+        '"confidence":"high"|"medium"|"low",'
+        '"summary":"one sentence max 20 words",'
+        '"bullets":[{"type":"bull"|"bear","text":"max 15 words"}]}'
+        "\nProvide 2-3 bull and 1-2 bear bullets."
+    )
+
+    async def _call_llm(base_url: str, key: str, model: str):
+        async with httpx.AsyncClient(timeout=25) as c:
+            r = await c.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                json={"model": model, "messages": [{"role": "user", "content": prompt}],
+                      "temperature": 0.3, "max_tokens": 500},
+            )
+            r.raise_for_status()
+            content = r.json()["choices"][0]["message"]["content"].strip()
+            if content.startswith("```"):
+                content = "\n".join(content.split("\n")[1:])
+                content = content.split("```")[0].strip()
+            return json.loads(content)
+
+    analysis = None
+    xai_key = os.getenv("XAI_API_KEY", "")
+    groq_key = os.getenv("GROQ_API_KEY", "")
+
+    if xai_key:
+        try:
+            analysis = await _call_llm("https://api.x.ai/v1", xai_key, "grok-3-mini")
+        except Exception as e:
+            print(f"[WARN] trump-analysis Grok: {e}")
+
+    if analysis is None and groq_key:
+        try:
+            analysis = await _call_llm("https://api.groq.com/openai/v1", groq_key, "llama-3.3-70b-versatile")
+        except Exception as e:
+            print(f"[WARN] trump-analysis Groq: {e}")
+
+    if analysis is None:
+        raise HTTPException(status_code=503, detail="LLM analysis failed")
+
+    result = {
+        "sentiment":      analysis.get("sentiment", "mixed"),
+        "spy_impact":     analysis.get("spy_impact", "neutral"),
+        "confidence":     analysis.get("confidence", "medium"),
+        "summary":        analysis.get("summary", ""),
+        "bullets":        analysis.get("bullets", []),
+        "articles":       articles[:8],
+        "headline_count": len(headlines),
+        "fetched_at":     datetime.utcnow().isoformat(),
+    }
+    try:
+        with open(cache_file, "w") as f:
+            json.dump(result, f)
+    except Exception:
+        pass
+    return result
+
+
+# ============================================================================
+# SENTIMENT STREAM — SQLite persistence + NetworkX graph + WebSocket
+# ============================================================================
+
+try:
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    _vader = SentimentIntensityAnalyzer()
+    VADER_AVAILABLE = True
+    print("[OK] VADER sentiment analyser loaded")
+except ImportError:
+    VADER_AVAILABLE = False
+    _vader = None
+    print("[WARN] vaderSentiment not installed — run: pip install vaderSentiment")
+
+try:
+    import networkx as nx
+    _graph: nx.DiGraph = nx.DiGraph()
+    NETWORKX_AVAILABLE = True
+    print("[OK] NetworkX graph loaded")
+except ImportError:
+    NETWORKX_AVAILABLE = False
+    _graph = None
+    print("[WARN] networkx not installed — run: pip install networkx")
+
+_STREAM_DB = "market_stream.db"
+_TWEET_KEYWORDS = ["tariff", "trade", "fed", "inflation", "china", "spy", "market", "stock", "economy", "rate"]
+
+# ── TF-IDF KNN index (pure numpy, no extra packages) ────────────────────────
+import re as _re
+
+_knn_docs: list = []
+_knn_vocab: dict = {}
+_knn_idf = None
+_knn_matrix = None
+
+
+def _tokenize(text: str) -> list:
+    return _re.findall(r'\b[a-z]{2,15}\b', text.lower())
+
+
+def _rebuild_knn():
+    global _knn_vocab, _knn_idf, _knn_matrix
+    if not _knn_docs:
+        _knn_vocab = {}
+        _knn_idf = np.array([], dtype=np.float32)
+        _knn_matrix = np.zeros((0, 0), dtype=np.float32)
+        return
+    docs_tokens = [d["tokens"] for d in _knn_docs]
+    all_words = sorted({w for tokens in docs_tokens for w in tokens})
+    _knn_vocab = {w: i for i, w in enumerate(all_words)}
+    n, v = len(docs_tokens), len(all_words)
+    if v == 0:
+        _knn_matrix = np.zeros((n, 0), dtype=np.float32)
+        _knn_idf = np.array([], dtype=np.float32)
+        return
+    tf = np.zeros((n, v), dtype=np.float32)
+    for i, tokens in enumerate(docs_tokens):
+        for w in tokens:
+            if w in _knn_vocab:
+                tf[i, _knn_vocab[w]] += 1
+        if tokens:
+            tf[i] /= len(tokens)
+    df = (tf > 0).sum(axis=0)
+    _knn_idf = np.log((n + 1) / (df + 1)).astype(np.float32) + 1
+    tfidf = tf * _knn_idf
+    norms = np.linalg.norm(tfidf, axis=1, keepdims=True)
+    norms[norms == 0] = 1
+    _knn_matrix = (tfidf / norms).astype(np.float32)
+
+
+def _vectorize_query(text: str) -> np.ndarray:
+    tokens = _tokenize(text)
+    if not tokens or _knn_idf is None or len(_knn_vocab) == 0:
+        return np.zeros(max(len(_knn_vocab), 1), dtype=np.float32)
+    v = np.zeros(len(_knn_vocab), dtype=np.float32)
+    for w in tokens:
+        if w in _knn_vocab:
+            v[_knn_vocab[w]] += 1
+    v /= max(len(tokens), 1)
+    v = v * _knn_idf
+    norm = float(np.linalg.norm(v))
+    if norm > 0:
+        v /= norm
+    return v
+
+
+def _knn_predict(text: str, k: int = 5) -> dict:
+    if _knn_matrix is None or len(_knn_docs) == 0 or _knn_matrix.size == 0:
+        return {"predicted": None, "confidence": 0.0, "similar_tweets": [], "index_size": 0}
+    q = _vectorize_query(text)
+    if q.shape[0] != _knn_matrix.shape[1]:
+        return {"predicted": None, "confidence": 0.0, "similar_tweets": [], "index_size": len(_knn_docs)}
+    sims = (_knn_matrix @ q).tolist()
+    ranked = sorted(enumerate(sims), key=lambda x: x[1], reverse=True)[:min(k, len(_knn_docs))]
+    results = []
+    for idx, sim in ranked:
+        if sim < 0.05:
+            continue
+        doc = _knn_docs[idx]
+        results.append({
+            "content": doc["content"][:120],
+            "similarity": round(sim, 3),
+            "sentiment": round(doc["sentiment"], 3),
+            "spy_impact": doc.get("spy_impact"),
+        })
+    if not results:
+        return {"predicted": None, "confidence": 0.0, "similar_tweets": [], "index_size": len(_knn_docs)}
+    weights = [r["similarity"] for r in results]
+    values = [r["spy_impact"] if r["spy_impact"] is not None else r["sentiment"] for r in results]
+    predicted = float(sum(w * v for w, v in zip(weights, values)) / sum(weights))
+    return {
+        "predicted": round(predicted, 4),
+        "confidence": round(sum(weights) / len(weights), 3),
+        "similar_tweets": results,
+        "index_size": len(_knn_docs),
+    }
+
+
+def _add_to_knn(tweet_id: str, content: str, sentiment: float, spy_impact: float = None):
+    if any(d["id"] == tweet_id for d in _knn_docs):
+        return
+    _knn_docs.append({
+        "id": tweet_id, "tokens": _tokenize(content),
+        "content": content[:200], "sentiment": sentiment, "spy_impact": spy_impact,
+    })
+    _rebuild_knn()
+
+
+def _init_knn_from_db():
+    tweets = _load_recent_tweets(500)
+    for t in tweets:
+        _knn_docs.append({
+            "id": t["id"], "tokens": _tokenize(t["content"]),
+            "content": t["content"][:200], "sentiment": t["sentiment"], "spy_impact": None,
+        })
+    if _knn_docs:
+        _rebuild_knn()
+        print(f"[OK] KNN index built: {len(_knn_docs)} documents")
+    else:
+        print("[INFO] KNN index empty — inject tweets to populate")
+
+
+_stream_clients: list = []
+
+
+def _init_stream_db():
+    con = sqlite3.connect(_STREAM_DB)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS tweets (
+            id TEXT PRIMARY KEY, content TEXT, sentiment REAL,
+            keywords TEXT, posted_at TEXT
+        )
+    """)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS spy_prices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, price REAL, recorded_at TEXT
+        )
+    """)
+    con.commit()
+    con.close()
+    print(f"[OK] Stream DB initialised at {_STREAM_DB}")
+
+
+def _save_tweet(tweet_id: str, content: str, sentiment: float, keywords: list, posted_at: str):
+    try:
+        con = sqlite3.connect(_STREAM_DB)
+        con.execute(
+            "INSERT OR IGNORE INTO tweets (id, content, sentiment, keywords, posted_at) VALUES (?,?,?,?,?)",
+            (tweet_id, content, sentiment, json.dumps(keywords), posted_at)
+        )
+        con.commit()
+        con.close()
+    except Exception as e:
+        print(f"[WARN] _save_tweet: {e}")
+
+
+def _save_spy_price(price: float, recorded_at: str):
+    try:
+        con = sqlite3.connect(_STREAM_DB)
+        con.execute("INSERT INTO spy_prices (price, recorded_at) VALUES (?,?)", (price, recorded_at))
+        con.commit()
+        con.close()
+    except Exception as e:
+        print(f"[WARN] _save_spy_price: {e}")
+
+
+def _load_recent_tweets(limit: int = 50) -> list:
+    try:
+        con = sqlite3.connect(_STREAM_DB)
+        rows = con.execute(
+            "SELECT id, content, sentiment, keywords, posted_at FROM tweets ORDER BY posted_at DESC LIMIT ?",
+            (limit,)
+        ).fetchall()
+        con.close()
+        return [{"id": r[0], "content": r[1], "sentiment": r[2],
+                 "keywords": json.loads(r[3] or "[]"), "posted_at": r[4]} for r in rows]
+    except Exception as e:
+        print(f"[WARN] _load_recent_tweets: {e}")
+        return []
+
+
+async def _broadcast(data: dict):
+    dead = []
+    for ws in _stream_clients:
+        try:
+            await ws.send_json(data)
+        except Exception:
+            dead.append(ws)
+    for ws in dead:
+        if ws in _stream_clients:
+            _stream_clients.remove(ws)
+
+
+async def _spy_price_loop():
+    while True:
+        try:
+            ticker = yf.Ticker("SPY")
+            price = float(ticker.fast_info["last_price"])
+            recorded_at = datetime.utcnow().isoformat() + "Z"
+            _save_spy_price(price, recorded_at)
+            if NETWORKX_AVAILABLE:
+                _graph.add_node(f"spy_{int(time.time())}", type="price", symbol="SPY",
+                                price=price, recorded_at=recorded_at)
+            await _broadcast({"type": "price", "symbol": "SPY", "price": price, "recorded_at": recorded_at})
+        except Exception as e:
+            print(f"[WARN] _spy_price_loop: {e}")
+        await asyncio.sleep(30)
+
+
+async def _tweet_poll_loop():
+    try:
+        from twscrape import API as TwAPI, gather
+    except ImportError:
+        print("[INFO] twscrape not installed — use POST /api/market-stream/tweet to inject manually.")
+        return
+    tw = TwAPI()
+    try:
+        await tw.pool.login_all()
+    except Exception as e:
+        print(f"[WARN] twscrape login_all failed: {e}")
+        return
+    seen: set = set()
+    while True:
+        try:
+            tweets = await gather(tw.search("(from:realDonaldTrump OR from:POTUS) lang:en", limit=10))
+            for t in tweets:
+                if t.id in seen:
+                    continue
+                seen.add(t.id)
+                content = t.rawContent[:300]
+                score = _vader.polarity_scores(content)["compound"] if VADER_AVAILABLE else 0.0
+                matched = [k for k in _TWEET_KEYWORDS if k in content.lower()]
+                posted = t.date.isoformat()
+                tweet_id = str(t.id)
+                _save_tweet(tweet_id, content, score, matched, posted)
+                _add_to_knn(tweet_id, content, score)
+                if NETWORKX_AVAILABLE:
+                    _graph.add_node(f"tweet_{tweet_id}", type="tweet", content=content,
+                                    sentiment=score, keywords=matched, posted_at=posted)
+                await _broadcast({"type": "tweet", "id": tweet_id, "content": content,
+                                  "sentiment": score, "keywords": matched, "posted_at": posted})
+        except Exception as e:
+            print(f"[WARN] _tweet_poll_loop: {e}")
+        await asyncio.sleep(60)
+
+
+@app.on_event("startup")
+async def _stream_startup():
+    _init_stream_db()
+    _init_knn_from_db()
+    asyncio.create_task(_spy_price_loop())
+    asyncio.create_task(_tweet_poll_loop())
+
+
+@app.websocket("/ws/market-stream")
+async def market_stream_ws(websocket: WebSocket):
+    await websocket.accept()
+    _stream_clients.append(websocket)
+    try:
+        for t in _load_recent_tweets(20):
+            await websocket.send_json({"type": "tweet", **t})
+    except Exception:
+        pass
+    try:
+        while True:
+            await asyncio.sleep(30)
+            await websocket.send_json({"type": "ping"})
+    except (WebSocketDisconnect, Exception):
+        if websocket in _stream_clients:
+            _stream_clients.remove(websocket)
+
+
+@app.post("/api/market-stream/tweet")
+async def inject_tweet(body: dict):
+    content = (body.get("content") or "").strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="content is required")
+    tweet_id = f"manual_{int(time.time() * 1000)}"
+    score = _vader.polarity_scores(content)["compound"] if VADER_AVAILABLE else 0.0
+    matched = [k for k in _TWEET_KEYWORDS if k in content.lower()]
+    posted = datetime.utcnow().isoformat() + "Z"
+    _save_tweet(tweet_id, content[:300], score, matched, posted)
+    _add_to_knn(tweet_id, content[:300], score)
+    if NETWORKX_AVAILABLE:
+        _graph.add_node(f"tweet_{tweet_id}", type="tweet", content=content[:300],
+                        sentiment=score, keywords=matched, posted_at=posted)
+    payload = {"type": "tweet", "id": tweet_id, "content": content[:300],
+               "sentiment": score, "keywords": matched, "posted_at": posted}
+    await _broadcast(payload)
+    return payload
+
+
+@app.get("/api/correlations")
+def get_correlations():
+    tweets = _load_recent_tweets(100)
+    negative = [t for t in tweets if t["sentiment"] < -0.2]
+    return {"correlations": sorted(negative, key=lambda x: x["sentiment"])}
+
+
+@app.get("/api/market-stream/history")
+def get_stream_history():
+    tweets = _load_recent_tweets(50)
+    try:
+        con = sqlite3.connect(_STREAM_DB)
+        rows = con.execute(
+            "SELECT price, recorded_at FROM spy_prices ORDER BY recorded_at DESC LIMIT 20"
+        ).fetchall()
+        con.close()
+        prices = [{"price": r[0], "recorded_at": r[1]} for r in rows]
+    except Exception:
+        prices = []
+    return {"tweets": tweets, "spy_prices": prices}
+
+
+@app.post("/api/trump-analysis/predict")
+async def predict_tweet_impact(body: dict):
+    """
+    VADER + KNN side-by-side comparison.
+    Body: { "tweet": "..." }
+    """
+    text = (body.get("tweet") or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="tweet field required")
+    vader_score = _vader.polarity_scores(text)["compound"] if VADER_AVAILABLE else 0.0
+    vader_label = "bullish" if vader_score > 0.2 else "bearish" if vader_score < -0.2 else "neutral"
+    knn = _knn_predict(text)
+    tweet_id = f"predict_{int(time.time() * 1000)}"
+    _add_to_knn(tweet_id, text, vader_score)
+    return {
+        "tweet": text[:300],
+        "vader_sentiment": round(vader_score, 3),
+        "vader_label": vader_label,
+        "knn_predicted": knn["predicted"],
+        "knn_confidence": knn["confidence"],
+        "knn_similar": knn["similar_tweets"],
+        "index_size": knn["index_size"],
+    }
 
 
 # News page categories → symbol mappings
