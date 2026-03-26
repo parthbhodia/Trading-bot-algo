@@ -24,7 +24,7 @@ const LiveSignal = () => {
   const fetchLiveSignal = async () => {
     try {
       setIsLoading(true);
-      const url = `http://localhost:8001/api/strategy-signals/dual_momentum?mode=${strategyMode}&lookback=${lookbackDays}`;
+      const url = `${API_BASE_URL}/api/strategy-signals/dual_momentum?mode=${strategyMode}&lookback=${lookbackDays}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch signal');
 

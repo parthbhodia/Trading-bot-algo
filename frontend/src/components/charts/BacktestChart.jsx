@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config.js";
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, Area, AreaChart, ComposedChart } from 'recharts';
 import Toast from '../Toast';
@@ -106,7 +107,7 @@ const BacktestChart = () => {
     try {
       setLiveSignalLoading(true);
       const res = await fetch(
-        `http://localhost:8001/api/pltr-signal?symbol=${selectedSymbol}&interval=${selectedInterval}`
+        `${API_BASE_URL}/api/pltr-signal?symbol=${selectedSymbol}&interval=${selectedInterval}`
       );
       if (!res.ok) throw new Error(`Signal API returned ${res.status}`);
       const data = await res.json();
@@ -159,7 +160,7 @@ const BacktestChart = () => {
 
   const fetchAvailableStrategies = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/strategies');
+      const response = await fetch(`${API_BASE_URL}/api/strategies`);
       const data = await response.json();
       setAvailableStrategies(data.strategies);
       
@@ -177,7 +178,7 @@ const BacktestChart = () => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('http://localhost:8001/api/backtest', {
+      const response = await fetch('${API_BASE_URL}/api/backtest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

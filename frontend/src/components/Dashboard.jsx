@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config.js";
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Badge } from './ui/Badge';
@@ -76,7 +77,7 @@ const Dashboard = () => {
       setPortfolioData(prev => ({ ...prev, isLoading: true, error: null }));
       
       // Try to get real portfolio data from backend
-      const response = await fetch('http://localhost:8001/api/portfolio');
+      const response = await fetch(`${API_BASE_URL}/api/portfolio`);
       
       if (response.ok) {
         const raw = await response.json();
@@ -245,7 +246,7 @@ const Dashboard = () => {
     setAddPosLoading(true);
     setAddPosError(null);
     try {
-      const res = await fetch('http://localhost:8001/api/portfolio/positions', {
+      const res = await fetch('${API_BASE_URL}/api/portfolio/positions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ positions: buildPositionsPayload(newPos) }),
@@ -266,7 +267,7 @@ const Dashboard = () => {
 
   const handleRemovePosition = async (symbol) => {
     try {
-      const res = await fetch('http://localhost:8001/api/portfolio/positions', {
+      const res = await fetch('${API_BASE_URL}/api/portfolio/positions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ positions: buildPositionsPayload(null, symbol) }),
@@ -293,7 +294,7 @@ const Dashboard = () => {
           positions[p.symbol] = { shares: p.shares, avg_cost: p.avgCost };
         }
       });
-      const res = await fetch('http://localhost:8001/api/portfolio/positions', {
+      const res = await fetch('${API_BASE_URL}/api/portfolio/positions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ positions }),
@@ -313,7 +314,7 @@ const Dashboard = () => {
     setEarningsLoading(true);
     setEarningsError(null);
     try {
-      const res = await fetch('http://localhost:8001/api/earnings?symbols=PLTR,NVDA,MSFT,ORCL,AVGO,POET');
+      const res = await fetch(`${API_BASE_URL}/api/earnings?symbols=PLTR,NVDA,MSFT,ORCL,AVGO,POET`);
       if (!res.ok) throw new Error('Earnings API unavailable');
       const data = await res.json();
       setEarningsData(data.earnings || []);
@@ -330,7 +331,7 @@ const Dashboard = () => {
     setNewsLoading(true);
     setNewsError(null);
     try {
-      const res = await fetch(`http://localhost:8001/api/news/${symbol}`);
+      const res = await fetch(`${API_BASE_URL}/api/news/${symbol}`);
       if (!res.ok) throw new Error(`News API returned ${res.status}`);
       const data = await res.json();
       setNewsCache(prev => ({ ...prev, [symbol]: data }));
@@ -1039,7 +1040,7 @@ const Dashboard = () => {
                       setNewPos(p => ({ ...p, fetchingPrice: true }));
                       setAddPosError(null);
                       try {
-                        const res = await fetch(`http://localhost:8001/api/performance/${newPos.symbol}?period=5d`);
+                        const res = await fetch(`${API_BASE_URL}/api/performance/${newPos.symbol}?period=5d`);
                         if (!res.ok) throw new Error('Invalid ticker');
                         const data = await res.json();
                         if (data.current_price) {

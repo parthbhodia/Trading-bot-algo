@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../config.js";
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -14,7 +15,7 @@ const PerformanceChart = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch(`http://localhost:8001/api/performance/comparison?period=${period}`);
+        const res = await fetch(`${API_BASE_URL}/api/performance/comparison?period=${period}`);
         if (!res.ok) {
           const err = await res.json();
           throw new Error(err.detail || 'Failed to fetch performance data');
@@ -39,7 +40,7 @@ const PerformanceChart = () => {
 
       try {
         for (const p of periods) {
-          const res = await fetch(`http://localhost:8001/api/performance/comparison?period=${p}`);
+          const res = await fetch(`${API_BASE_URL}/api/performance/comparison?period=${p}`);
           if (res.ok) {
             results[p] = await res.json();
           }

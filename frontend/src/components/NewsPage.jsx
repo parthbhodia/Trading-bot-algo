@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../config.js";
 import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Newspaper, TrendingUp, TrendingDown, Minus,
          AlertTriangle, Zap, Globe, Flame, Cpu, BarChart2 } from 'lucide-react';
@@ -199,7 +200,7 @@ const NewsPage = () => {
     setLoading(symbol, true);
     setErrorMap(prev => { const m = { ...prev }; delete m[symbol]; return m; });
     try {
-      const res = await fetch(`http://localhost:8001/api/news/${symbol}`);
+      const res = await fetch(`${API_BASE_URL}/api/news/${symbol}`);
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       setNewsCache(prev => ({ ...prev, [symbol]: data }));
