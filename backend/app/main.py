@@ -3113,7 +3113,7 @@ async def send_sms_via_email(message: str, carrier_email: str, email_config: Ema
 # ============================================================================
 
 class TradingViewAlert(BaseModel):
-    symbol:   str
+    symbol:   Optional[str]  = None
     price:    Optional[float] = None
     action:   Optional[str]  = None      # BUY / SELL / ALERT
     strategy: Optional[str]  = None
@@ -3123,14 +3123,34 @@ class TradingViewAlert(BaseModel):
 
 
 @app.post("/api/webhook/tradingview")
-async def tradingview_webhook(alert: TradingViewAlert):
+async def tradingview_webhook(request: Request):
     """
     Receives TradingView alert webhooks and fans out to:
     - Telegram message
     - Email-to-SMS (free via carrier gateway)
-    - Email notification
     - Supabase log
+    Accepts both JSON body and plain text from TradingView.
     """
+    # Try JSON first, fall back to plain text
+    try:
+        body = await request.json()
+        if isinstance(body, str):
+            body = {"message": body, "symbol": body}
+    except Exception:
+        raw = await request.body()
+        text = raw.decode("utf-8", errors="ignore").strip()
+        body = {"message": text, "symbol": text or "UNKNOWN"}
+
+    alert = TradingViewAlert(
+        symbol   = body.get("symbol") or body.get("ticker") or "UNKNOWN",
+        price    = body.get("price") or body.get("close"),
+        action   = body.get("action") or body.get("order_action"),
+        strategy = body.get("strategy") or body.get("strategy_name"),
+        interval = body.get("interval") or body.get("timeframe"),
+        message  = body.get("message") or body.get("text"),
+        time     = body.get("time") or body.get("timenow"),
+    )
+
     emoji  = "🟢" if alert.action == "BUY" else "🔴" if alert.action == "SELL" else "🔔"
     price_str = f"${alert.price:.2f}" if alert.price else "N/A"
     telegram_msg = (
