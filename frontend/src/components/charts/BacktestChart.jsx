@@ -346,9 +346,9 @@ const BacktestChart = () => {
 
   if (isLoading) {
     return (
-      <div className=`h-64 flex items-center justify-center text-zinc-400`>
-        <div className=`text-center`>
-          <div className=`animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto mb-4`></div>
+      <div className="h-64 flex items-center justify-center text-zinc-400">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto mb-4"></div>
           <p>Loading backtest data...</p>
         </div>
       </div>
@@ -357,10 +357,10 @@ const BacktestChart = () => {
 
   if (error) {
     return (
-      <div className=`h-64 flex items-center justify-center text-zinc-400`>
-        <div className=`text-center`>
-          <p className=`text-red-400`>{error}</p>
-          <p className=`text-sm mt-2`>Using fallback data</p>
+      <div className="h-64 flex items-center justify-center text-zinc-400">
+        <div className="text-center">
+          <p className="text-red-400">{error}</p>
+          <p className="text-sm mt-2">Using fallback data</p>
         </div>
       </div>
     );
@@ -369,7 +369,7 @@ const BacktestChart = () => {
   const metrics = getMetrics();
 
   return (
-    <div className=`space-y-6`>
+    <div className="space-y-6">
       {/* Toast Notification */}
       {toast && (
         <Toast
@@ -380,54 +380,54 @@ const BacktestChart = () => {
         />
       )}
       {/* Strategy Selector */}
-      <div className=`flex justify-between items-center`>
+      <div className="flex justify-between items-center">
         <div>
-          <h3 className=`text-lg font-semibold text-white`>Trading Strategy Backtest</h3>
-          <p className=`text-zinc-400 text-sm`>{getStrategyInfo(selectedStrategy).description}</p>
+          <h3 className="text-lg font-semibold text-white">Trading Strategy Backtest</h3>
+          <p className="text-zinc-400 text-sm">{getStrategyInfo(selectedStrategy).description}</p>
         </div>
-        <div className=`flex items-center space-x-6`>
-          <div className=`flex items-center space-x-2`>
-            <label className=`text-zinc-400 text-sm`>Symbol:</label>
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <label className="text-zinc-400 text-sm">Symbol:</label>
             <select
               value={selectedSymbol}
               onChange={(e) => setSelectedSymbol(e.target.value)}
-              className=`bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none`
+              className="bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none"
             >
-              <optgroup label=`AI / Tech`>
-                <option value=`PLTR`>PLTR (Palantir)</option>
-                <option value=`NVDA`>NVDA (Nvidia)</option>
-                <option value=`MSFT`>MSFT (Microsoft)</option>
-                <option value=`ORCL`>ORCL (Oracle)</option>
-                <option value=`AVGO`>AVGO (Broadcom)</option>
-                <option value=`POET`>POET (POET Technologies)</option>
+              <optgroup label="AI / Tech">
+                <option value="PLTR">PLTR (Palantir)</option>
+                <option value="NVDA">NVDA (Nvidia)</option>
+                <option value="MSFT">MSFT (Microsoft)</option>
+                <option value="ORCL">ORCL (Oracle)</option>
+                <option value="AVGO">AVGO (Broadcom)</option>
+                <option value="POET">POET (POET Technologies)</option>
               </optgroup>
-              <optgroup label=`ETFs`>
-                <option value=`TQQQ`>TQQQ (3x Nasdaq)</option>
-                <option value=`QQQ`>QQQ (Nasdaq)</option>
-                <option value=`SPY`>SPY (S&P 500)</option>
+              <optgroup label="ETFs">
+                <option value="TQQQ">TQQQ (3x Nasdaq)</option>
+                <option value="QQQ">QQQ (Nasdaq)</option>
+                <option value="SPY">SPY (S&P 500)</option>
               </optgroup>
             </select>
           </div>
 
-          <div className=`flex items-center space-x-2`>
-            <label className=`text-zinc-400 text-sm`>Interval:</label>
+          <div className="flex items-center space-x-2">
+            <label className="text-zinc-400 text-sm">Interval:</label>
             <select
               value={selectedInterval}
               onChange={(e) => setSelectedInterval(e.target.value)}
-              className=`bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none`
+              className="bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none"
             >
-              <option value=`1wk`>Weekly (1W)</option>
-              <option value=`1d`>Daily (1D)</option>
-              <option value=`1h`>Hourly (1H) — max 2yr</option>
+              <option value="1wk">Weekly (1W)</option>
+              <option value="1d">Daily (1D)</option>
+              <option value="1h">Hourly (1H) — max 2yr</option>
             </select>
           </div>
           
-          <div className=`flex items-center space-x-2`>
-            <label className=`text-zinc-400 text-sm`>Strategy:</label>
+          <div className="flex items-center space-x-2">
+            <label className="text-zinc-400 text-sm">Strategy:</label>
             <select
               value={selectedStrategy}
               onChange={(e) => setSelectedStrategy(e.target.value)}
-              className=`bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none`
+              className="bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none"
             >
               {availableStrategies.map(strategy => (
                 <option key={strategy.id} value={strategy.id}>
@@ -437,41 +437,41 @@ const BacktestChart = () => {
             </select>
           </div>
 
-          <div className=`flex items-center space-x-2`>
-            <label className=`text-zinc-400 text-sm`>Period:</label>
+          <div className="flex items-center space-x-2">
+            <label className="text-zinc-400 text-sm">Period:</label>
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className=`bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none`
+              className="bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 focus:border-green-400 focus:outline-none"
             >
               {selectedInterval === '1h' ? (
                 <>
-                  <option value=`1mo`>1 Month</option>
-                  <option value=`3mo`>3 Months</option>
-                  <option value=`6mo`>6 Months</option>
-                  <option value=`1y`>1 Year</option>
-                  <option value=`2y`>2 Years (max)</option>
+                  <option value="1mo">1 Month</option>
+                  <option value="3mo">3 Months</option>
+                  <option value="6mo">6 Months</option>
+                  <option value="1y">1 Year</option>
+                  <option value="2y">2 Years (max)</option>
                 </>
               ) : selectedInterval === '1wk' ? (
                 <>
-                  <option value=`1mo`>1 Month</option>
-                  <option value=`3mo`>3 Months</option>
-                  <option value=`6mo`>6 Months</option>
-                  <option value=`1y`>1 Year</option>
-                  <option value=`3y`>3 Years</option>
-                  <option value=`5y`>5 Years</option>
-                  <option value=`10y`>10 Years</option>
-                  <option value=`max`>Max History</option>
+                  <option value="1mo">1 Month</option>
+                  <option value="3mo">3 Months</option>
+                  <option value="6mo">6 Months</option>
+                  <option value="1y">1 Year</option>
+                  <option value="3y">3 Years</option>
+                  <option value="5y">5 Years</option>
+                  <option value="10y">10 Years</option>
+                  <option value="max">Max History</option>
                 </>
               ) : (
                 <>
-                  <option value=`1mo`>1 Month</option>
-                  <option value=`3mo`>3 Months</option>
-                  <option value=`6mo`>6 Months</option>
-                  <option value=`1y`>1 Year</option>
-                  <option value=`3y`>3 Years</option>
-                  <option value=`5y`>5 Years</option>
-                  <option value=`10y`>10 Years</option>
+                  <option value="1mo">1 Month</option>
+                  <option value="3mo">3 Months</option>
+                  <option value="6mo">6 Months</option>
+                  <option value="1y">1 Year</option>
+                  <option value="3y">3 Years</option>
+                  <option value="5y">5 Years</option>
+                  <option value="10y">10 Years</option>
                 </>
               )}
             </select>
@@ -480,62 +480,62 @@ const BacktestChart = () => {
       </div>
 
       {/* Performance Metrics */}
-      <div className=`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4`>
-        <div className=`glass p-3 rounded`>
-          <p className=`text-zinc-400 text-xs`>Total Return</p>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="glass p-3 rounded">
+          <p className="text-zinc-400 text-xs">Total Return</p>
           <p className={`font-semibold ${metrics.totalReturn >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {metrics.totalReturn.toFixed(2)}%
           </p>
         </div>
-        <div className=`glass p-3 rounded`>
-          <p className=`text-zinc-400 text-xs`>Max Drawdown</p>
-          <p className=`text-red-400 font-semibold`>{metrics.maxDrawdown.toFixed(2)}%</p>
+        <div className="glass p-3 rounded">
+          <p className="text-zinc-400 text-xs">Max Drawdown</p>
+          <p className="text-red-400 font-semibold">{metrics.maxDrawdown.toFixed(2)}%</p>
         </div>
-        <div className=`glass p-3 rounded`>
-          <p className=`text-zinc-400 text-xs`>Sharpe Ratio</p>
-          <p className=`text-white font-semibold`>{metrics.sharpeRatio.toFixed(2)}</p>
+        <div className="glass p-3 rounded">
+          <p className="text-zinc-400 text-xs">Sharpe Ratio</p>
+          <p className="text-white font-semibold">{metrics.sharpeRatio.toFixed(2)}</p>
         </div>
-        <div className=`glass p-3 rounded`>
-          <p className=`text-zinc-400 text-xs`>Win Rate</p>
-          <p className=`text-white font-semibold`>{metrics.winRate.toFixed(1)}%</p>
+        <div className="glass p-3 rounded">
+          <p className="text-zinc-400 text-xs">Win Rate</p>
+          <p className="text-white font-semibold">{metrics.winRate.toFixed(1)}%</p>
         </div>
-        <div className=`glass p-3 rounded`>
-          <p className=`text-zinc-400 text-xs`>Total Trades</p>
-          <p className=`text-white font-semibold`>{metrics.totalTrades}</p>
+        <div className="glass p-3 rounded">
+          <p className="text-zinc-400 text-xs">Total Trades</p>
+          <p className="text-white font-semibold">{metrics.totalTrades}</p>
         </div>
-        <div className=`glass p-3 rounded`>
-          <p className=`text-zinc-400 text-xs`>Annualized</p>
+        <div className="glass p-3 rounded">
+          <p className="text-zinc-400 text-xs">Annualized</p>
           <p className={`font-semibold ${metrics.annualizedReturn >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {metrics.annualizedReturn.toFixed(2)}%
           </p>
         </div>
         {/* Buy & Hold card — return + max drawdown */}
-        <div className=`glass p-3 rounded border border-zinc-600/40 col-span-1`>
-          <p className=`text-zinc-400 text-xs`>B&amp;H {selectedSymbol}</p>
+        <div className="glass p-3 rounded border border-zinc-600/40 col-span-1">
+          <p className="text-zinc-400 text-xs">B&amp;H {selectedSymbol}</p>
           <p className={`font-semibold ${metrics.buyAndHoldReturn >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
             {metrics.buyAndHoldReturn.toFixed(1)}%
           </p>
-          <p className=`text-zinc-500 text-xs mt-0.5`>
-            DD: <span className=`text-red-400`>{metrics.buyAndHoldMaxDrawdown.toFixed(1)}%</span>
+          <p className="text-zinc-500 text-xs mt-0.5">
+            DD: <span className="text-red-400">{metrics.buyAndHoldMaxDrawdown.toFixed(1)}%</span>
           </p>
         </div>
 
         {/* Alpha return card */}
         <div className={`glass p-3 rounded border ${(metrics.totalReturn - metrics.buyAndHoldReturn) >= 0 ? 'border-green-500/30' : 'border-red-500/30'}`}>
-          <p className=`text-zinc-400 text-xs`>Return Alpha</p>
+          <p className="text-zinc-400 text-xs">Return Alpha</p>
           <p className={`font-semibold ${(metrics.totalReturn - metrics.buyAndHoldReturn) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {(metrics.totalReturn - metrics.buyAndHoldReturn) >= 0 ? '+' : ''}{(metrics.totalReturn - metrics.buyAndHoldReturn).toFixed(1)}%
           </p>
-          <p className=`text-zinc-500 text-xs mt-0.5`>vs buy &amp; hold</p>
+          <p className="text-zinc-500 text-xs mt-0.5">vs buy &amp; hold</p>
         </div>
 
         {/* Drawdown alpha card — positive = strategy protected more */}
         <div className={`glass p-3 rounded border ${metrics.drawdownAlpha >= 0 ? 'border-green-500/30' : 'border-red-500/30'}`}>
-          <p className=`text-zinc-400 text-xs`>DD Alpha</p>
+          <p className="text-zinc-400 text-xs">DD Alpha</p>
           <p className={`font-semibold ${metrics.drawdownAlpha >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {metrics.drawdownAlpha >= 0 ? '+' : ''}{metrics.drawdownAlpha.toFixed(1)}%
           </p>
-          <p className=`text-zinc-500 text-xs mt-0.5`>{metrics.drawdownAlpha >= 0 ? 'less risk' : 'more risk'} vs B&amp;H</p>
+          <p className="text-zinc-500 text-xs mt-0.5">{metrics.drawdownAlpha >= 0 ? 'less risk' : 'more risk'} vs B&amp;H</p>
         </div>
       </div>
 
@@ -583,39 +583,39 @@ const BacktestChart = () => {
           : 'never';
 
         return (
-          <div className=`glass p-4 rounded border border-zinc-700/50`>
+          <div className="glass p-4 rounded border border-zinc-700/50">
             {/* Header row */}
-            <div className=`flex items-start justify-between mb-4`>
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <h4 className=`text-white font-semibold text-sm`>
+                <h4 className="text-white font-semibold text-sm">
                   Live Signal — {selectedSymbol} ({intervalLabel})
                 </h4>
-                <p className=`text-zinc-500 text-xs mt-0.5`>
+                <p className="text-zinc-500 text-xs mt-0.5">
                   All 3 must confirm for BUY · SELL on crossover reversal · Updated: {timeAgo}
                 </p>
               </div>
-              <div className=`flex items-center gap-3`>
+              <div className="flex items-center gap-3">
                 {/* ── Alert controls ── */}
                 {notifPermission === 'granted' && audioAlertsEnabled ? (
                   /* Both enabled */
-                  <span className=`text-xs text-green-400 flex items-center gap-1.5`>
-                    <span className=`w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block`></span>
+                  <span className="text-xs text-green-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block"></span>
                     Alerts ON
                   </span>
                 ) : notifPermission === 'denied' ? (
                   /* Browser blocked — show audio toggle + help */
-                  <div className=`flex items-center gap-2`>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => { setAudioAlertsEnabled(a => !a); setShowNotifHelp(false); }}
                       className={`text-xs px-2 py-1 rounded border transition-colors ${audioAlertsEnabled ? 'border-green-500 text-green-400' : 'border-zinc-600 text-zinc-400 hover:border-yellow-500 hover:text-yellow-400'}`}
-                      title=`Toggle audio beep alerts (no browser permission needed)`
+                      title="Toggle audio beep alerts (no browser permission needed)"
                     >
                       {audioAlertsEnabled ? '🔊 Audio ON' : '🔇 Audio OFF'}
                     </button>
                     <button
                       onClick={() => setShowNotifHelp(h => !h)}
-                      className=`text-xs text-red-400 border border-red-500/40 px-2 py-1 rounded hover:border-red-400 transition-colors`
-                      title=`Notifications are blocked by your browser`
+                      className="text-xs text-red-400 border border-red-500/40 px-2 py-1 rounded hover:border-red-400 transition-colors"
+                      title="Notifications are blocked by your browser"
                     >
                       🚫 Notif Blocked
                     </button>
@@ -624,8 +624,8 @@ const BacktestChart = () => {
                   /* Default / not yet asked */
                   <button
                     onClick={handleEnableAlerts}
-                    className=`text-xs text-zinc-400 border border-zinc-600 px-2 py-1 rounded hover:border-green-500 hover:text-green-400 transition-colors`
-                    title=`Enable desktop alerts for signal changes`
+                    className="text-xs text-zinc-400 border border-zinc-600 px-2 py-1 rounded hover:border-green-500 hover:text-green-400 transition-colors"
+                    title="Enable desktop alerts for signal changes"
                   >
                     🔔 Enable Alerts
                   </button>
@@ -634,41 +634,41 @@ const BacktestChart = () => {
                 <button
                   onClick={fetchLiveSignal}
                   disabled={liveSignalLoading}
-                  className=`text-xs text-zinc-400 border border-zinc-600 px-2 py-1 rounded hover:border-zinc-400 transition-colors disabled:opacity-50`
+                  className="text-xs text-zinc-400 border border-zinc-600 px-2 py-1 rounded hover:border-zinc-400 transition-colors disabled:opacity-50"
                 >
                   {liveSignalLoading ? '...' : 'Refresh'}
                 </button>
                 {/* Current signal badge */}
                 <div className={`px-4 py-1.5 rounded-full border font-bold text-base ${sigBg} ${sigColor}`}>
                   {liveSignalLoading ? '...' : sig}
-                  {ls && <span className=`text-xs font-normal ml-1 opacity-80`>${ls.price}</span>}
+                  {ls && <span className="text-xs font-normal ml-1 opacity-80">${ls.price}</span>}
                 </div>
               </div>
             </div>
 
             {/* Notifications blocked — help banner */}
             {showNotifHelp && (
-              <div className=`mb-3 p-2.5 rounded bg-yellow-500/10 border border-yellow-500/30 flex items-start justify-between gap-3`>
+              <div className="mb-3 p-2.5 rounded bg-yellow-500/10 border border-yellow-500/30 flex items-start justify-between gap-3">
                 <div>
-                  <p className=`text-yellow-400 text-xs font-semibold mb-1`>Browser notifications are blocked</p>
-                  <p className=`text-zinc-400 text-xs`>
+                  <p className="text-yellow-400 text-xs font-semibold mb-1">Browser notifications are blocked</p>
+                  <p className="text-zinc-400 text-xs">
                     To re-enable: click the 🔒 lock icon in your browser address bar → Site settings → Notifications → Allow.
                     Audio alerts are active as fallback (🔊 icon above).
                   </p>
                 </div>
-                <button onClick={() => setShowNotifHelp(false)} className=`text-zinc-500 hover:text-white text-xs shrink-0`>✕</button>
+                <button onClick={() => setShowNotifHelp(false)} className="text-zinc-500 hover:text-white text-xs shrink-0">✕</button>
               </div>
             )}
 
             {/* Confirmation cards */}
-            <div className=`grid grid-cols-3 gap-3 mb-3`>
+            <div className="grid grid-cols-3 gap-3 mb-3">
               {confirms.map((c, idx) => (
                 <div key={idx} className={`rounded-lg p-3 border transition-colors ${
                   c.active === null  ? 'bg-zinc-800/40 border-zinc-700/40' :
                   c.active           ? 'bg-green-500/10 border-green-500/30' :
                                        'bg-red-500/10 border-red-500/20'
                 }`}>
-                  <div className=`flex items-center gap-2 mb-1.5`>
+                  <div className="flex items-center gap-2 mb-1.5">
                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                       c.active === null ? 'bg-zinc-700 text-zinc-400' :
                       c.active         ? 'bg-green-500 text-white' :
@@ -682,19 +682,19 @@ const BacktestChart = () => {
                                          'text-red-400'
                     }`}>{c.label}</span>
                   </div>
-                  <p className=`text-zinc-500 text-xs leading-tight`>{c.desc}</p>
+                  <p className="text-zinc-500 text-xs leading-tight">{c.desc}</p>
                 </div>
               ))}
             </div>
 
             {/* Confirm count + backtest summary */}
-            <div className=`flex items-center justify-between`>
-              <div className=`flex items-center gap-2`>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 {ls && [0,1,2].map(i => (
                   <span key={i} className={`w-2 h-2 rounded-full ${i < ls.confirm_count ? 'bg-green-400' : 'bg-zinc-600'}`} />
                 ))}
                 {ls && (
-                  <span className=`text-xs text-zinc-400 ml-1`>
+                  <span className="text-xs text-zinc-400 ml-1">
                     {ls.confirm_count}/3 confirmed
                     {ls.confirm_count === 3 && ' — all green, enter long'}
                     {ls.confirm_count === 2 && ' — wait for 3rd'}
@@ -703,7 +703,7 @@ const BacktestChart = () => {
                 )}
               </div>
               {selectedStrategy === 'hmaKahlman3Confirm' && (
-                <p className=`text-zinc-600 text-xs`>
+                <p className="text-zinc-600 text-xs">
                   Backtest: {metrics.totalTrades} trades · Ann. {metrics.annualizedReturn.toFixed(1)}%
                 </p>
               )}
@@ -713,23 +713,23 @@ const BacktestChart = () => {
       })()}
 
       {/* HMA-Kahlman Price Chart */}
-      <div className=`glass p-4 rounded`>
-        <div className=`flex items-center justify-between mb-3`>
-          <h4 className=`text-white font-semibold`>
+      <div className="glass p-4 rounded">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-white font-semibold">
             {selectedSymbol} · Price Action &amp; HMA-Kahlman Trend
-            <span className=`text-zinc-500 text-xs font-normal ml-2`>
+            <span className="text-zinc-500 text-xs font-normal ml-2">
               ({selectedInterval === '1wk' ? 'Weekly' : selectedInterval === '1h' ? 'Hourly' : 'Daily'} candles)
             </span>
           </h4>
-          <span className=`text-xs text-zinc-500`>Powered by TradingView Lightweight Charts</span>
+          <span className="text-xs text-zinc-500">Powered by TradingView Lightweight Charts</span>
         </div>
         <HMAKahlmanChart data={backtestData} symbol={selectedSymbol} />
       </div>
 
       {/* Equity Curve & Backtest Chart */}
-      <div className=`glass p-4 rounded`>
-        <div className=`flex items-center justify-between mb-4`>
-          <h4 className=`text-white font-semibold`>Portfolio Performance</h4>
+      <div className="glass p-4 rounded">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-white font-semibold">Portfolio Performance</h4>
           <TradingToolbar
             indicators={portfolioIndicators}
             onToggleIndicator={(id) => setPortfolioIndicators(prev => ({
@@ -738,24 +738,24 @@ const BacktestChart = () => {
             }))}
           />
         </div>
-      <ResponsiveContainer width=`100%` height={400}>
+      <ResponsiveContainer width="100%" height={400}>
         <ComposedChart data={dataWithEMA}>
-          <CartesianGrid strokeDasharray=`3 3` stroke=`#374151` />
+          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis 
-            dataKey=`date` 
-            stroke=`#9ca3af`
+            dataKey="date" 
+            stroke="#9ca3af"
             tick={{ fill: '#9ca3af', fontSize: 12 }}
           />
           <YAxis 
-            yAxisId=`price`
-            stroke=`#9ca3af`
+            yAxisId="price"
+            stroke="#9ca3af"
             tick={{ fill: '#9ca3af', fontSize: 12 }}
             tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
           />
           <YAxis 
-            yAxisId=`drawdown`
-            orientation=`right`
-            stroke=`#9ca3af`
+            yAxisId="drawdown"
+            orientation="right"
+            stroke="#9ca3af"
             tick={{ fill: '#9ca3af', fontSize: 12 }}
             tickFormatter={(value) => `${value.toFixed(0)}%`}
           />
@@ -775,16 +775,16 @@ const BacktestChart = () => {
           />
           <Legend
             wrapperStyle={{ color: '#f3f4f6', cursor: 'pointer' }}
-            iconType=`line`
+            iconType="line"
             onClick={handleLegendClick}
           />
           
           {/* Equity Asset Price */}
           <Line
-            yAxisId=`price`
-            type=`monotone`
-            dataKey=`ticker_price`
-            stroke=`#8b5cf6`
+            yAxisId="price"
+            type="monotone"
+            dataKey="ticker_price"
+            stroke="#8b5cf6"
             strokeWidth={2}
             dot={false}
             name={`${selectedSymbol} Price`}
@@ -793,63 +793,63 @@ const BacktestChart = () => {
 
           {/* Portfolio Value */}
           <Line
-            yAxisId=`price`
-            type=`monotone`
-            dataKey=`portfolio`
-            stroke=`#10b981`
+            yAxisId="price"
+            type="monotone"
+            dataKey="portfolio"
+            stroke="#10b981"
             strokeWidth={3}
             dot={false}
-            name=`Portfolio Value`
+            name="Portfolio Value"
             hide={!!hiddenLines['portfolio']}
           />
 
           {/* HMA-Kahlman Trend Lines */}
           <Line
-            yAxisId=`price`
-            type=`monotone`
-            dataKey=`ema7`
-            stroke=`#10b981`
+            yAxisId="price"
+            type="monotone"
+            dataKey="ema7"
+            stroke="#10b981"
             strokeWidth={2}
-            strokeDasharray=`0`
+            strokeDasharray="0"
             dot={false}
-            name=`HMA-K Fast (7)`
+            name="HMA-K Fast (7)"
             hide={!!hiddenLines['ema7']}
           />
           <Line
-            yAxisId=`price`
-            type=`monotone`
-            dataKey=`ema14`
-            stroke=`#f472b6`
+            yAxisId="price"
+            type="monotone"
+            dataKey="ema14"
+            stroke="#f472b6"
             strokeWidth={2}
-            strokeDasharray=`6 3`
+            strokeDasharray="6 3"
             dot={false}
-            name=`HMA-K Slow (14)`
+            name="HMA-K Slow (14)"
             hide={!!hiddenLines['ema14']}
           />
 
           {/* Drawdown */}
           <Area
-            yAxisId=`drawdown`
-            type=`monotone`
-            dataKey=`drawdown`
-            stroke=`#ef4444`
-            fill=`#ef4444`
+            yAxisId="drawdown"
+            type="monotone"
+            dataKey="drawdown"
+            stroke="#ef4444"
+            fill="#ef4444"
             fillOpacity={0.3}
             strokeWidth={1}
-            name=`Drawdown`
+            name="Drawdown"
             hide={!!hiddenLines['drawdown']}
           />
 
           {/* Buy & Hold benchmark line */}
           <Line
-            yAxisId=`price`
-            type=`monotone`
-            dataKey=`buy_and_hold_value`
-            stroke=`#3b82f6`
+            yAxisId="price"
+            type="monotone"
+            dataKey="buy_and_hold_value"
+            stroke="#3b82f6"
             strokeWidth={1.5}
-            strokeDasharray=`6 3`
+            strokeDasharray="6 3"
             dot={false}
-            name=`Buy & Hold`
+            name="Buy & Hold"
             hide={!!hiddenLines['buy_and_hold_value']}
           />
 
@@ -869,7 +869,7 @@ const BacktestChart = () => {
                 <ReferenceLine
                   key={`sig-${i}-${d.date}`}
                   x={d.date}
-                  yAxisId=`price`
+                  yAxisId="price"
                   stroke={isBuy ? '#10b981' : '#ef4444'}
                   strokeWidth={1.5}
                   strokeDasharray={isBuy ? '0' : '4 3'}
@@ -890,18 +890,18 @@ const BacktestChart = () => {
       </div>
 
       {/* Trade History - Shows actual BUY/SELL transitions */}
-      <div className=`space-y-2`>
-        <h4 className=`text-white font-semibold`>Trade History</h4>
-        <div className=`overflow-x-auto max-h-64 overflow-y-auto`>
-          <table className=`w-full text-xs text-zinc-300`>
-            <thead className=`sticky top-0 bg-zinc-900`>
-              <tr className=`border-b border-zinc-700`>
-                <th className=`text-left py-2 px-3 text-zinc-400`>Date</th>
-                <th className=`text-left py-2 px-3 text-zinc-400`>Signal</th>
-                <th className=`text-right py-2 px-3 text-zinc-400`>Price</th>
-                <th className=`text-right py-2 px-3 text-zinc-400`>Portfolio</th>
-                <th className=`text-right py-2 px-3 text-zinc-400`>Drawdown</th>
-                <th className=`text-right py-2 px-3 text-zinc-400`>Trade P/L</th>
+      <div className="space-y-2">
+        <h4 className="text-white font-semibold">Trade History</h4>
+        <div className="overflow-x-auto max-h-64 overflow-y-auto">
+          <table className="w-full text-xs text-zinc-300">
+            <thead className="sticky top-0 bg-zinc-900">
+              <tr className="border-b border-zinc-700">
+                <th className="text-left py-2 px-3 text-zinc-400">Date</th>
+                <th className="text-left py-2 px-3 text-zinc-400">Signal</th>
+                <th className="text-right py-2 px-3 text-zinc-400">Price</th>
+                <th className="text-right py-2 px-3 text-zinc-400">Portfolio</th>
+                <th className="text-right py-2 px-3 text-zinc-400">Drawdown</th>
+                <th className="text-right py-2 px-3 text-zinc-400">Trade P/L</th>
               </tr>
             </thead>
             <tbody>
@@ -928,17 +928,17 @@ const BacktestChart = () => {
                     }
                   }
                   return (
-                    <tr key={index} className=`border-b border-zinc-800 hover:bg-zinc-800/30`>
-                      <td className=`py-2 px-3 text-zinc-400 whitespace-nowrap`>{trade.date}</td>
-                      <td className=`py-2 px-3`>
+                    <tr key={index} className="border-b border-zinc-800 hover:bg-zinc-800/30">
+                      <td className="py-2 px-3 text-zinc-400 whitespace-nowrap">{trade.date}</td>
+                      <td className="py-2 px-3">
                         <span className={`font-semibold ${getSignalColor(trade.signal)}`}>
                           {trade.signal === 'BUY' ? '📈 BUY' : '📉 SELL'}
                         </span>
                       </td>
-                      <td className=`py-2 px-3 text-right font-semibold text-white whitespace-nowrap`>
+                      <td className="py-2 px-3 text-right font-semibold text-white whitespace-nowrap">
                         ${trade.ticker_price.toFixed(2)}
                       </td>
-                      <td className=`py-2 px-3 text-right text-green-400 font-semibold whitespace-nowrap`>
+                      <td className="py-2 px-3 text-right text-green-400 font-semibold whitespace-nowrap">
                         ${trade.portfolio ? Math.round(trade.portfolio).toLocaleString() : '—'}
                       </td>
                       <td className={`py-2 px-3 text-right font-semibold whitespace-nowrap ${trade.drawdown > 20 ? 'text-red-400' : 'text-orange-400'}`}>
@@ -956,7 +956,7 @@ const BacktestChart = () => {
             </tbody>
           </table>
         </div>
-        <p className=`text-xs text-zinc-500 mt-2`>
+        <p className="text-xs text-zinc-500 mt-2">
           💡 Shows actual BUY↔SELL transitions. Trade P/L shows the price change between each BUY→SELL pair.
         </p>
       </div>
