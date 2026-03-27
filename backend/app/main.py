@@ -3058,6 +3058,141 @@ async def get_news_categories():
     ]}
 
 
+# ============================================================================
+# TELEGRAM NOTIFICATIONS
+# ============================================================================
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
+
+async def send_telegram(message: str) -> dict:
+    """Send a message via Telegram bot."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return {"success": False, "error": "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set"}
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            res = await client.post(
+                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                json={
+                    "chat_id": TELEGRAM_CHAT_ID,
+                    "text": message,
+                    "parse_mode": "HTML"
+                }
+            )
+        return {"success": res.status_code == 200, "status": res.status_code}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+async def send_sms_via_email(message: str, carrier_email: str, email_config: EmailConfig) -> dict:
+    """
+    Send free SMS via carrier email-to-SMS gateway.
+    carrier_email examples:
+      AT&T:     1234567890@txt.att.net
+      T-Mobile: 1234567890@tmomail.net
+      Verizon:  1234567890@vtext.com
+    """
+    if not email_config.is_ready():
+        return {"success": False, "error": "Email not configured"}
+    try:
+        msg = MIMEText(message)
+        msg["From"]    = email_config.sender_email
+        msg["To"]      = carrier_email
+        msg["Subject"] = ""
+        with smtplib.SMTP(email_config.smtp_server, email_config.smtp_port) as server:
+            server.starttls()
+            server.login(email_config.sender_email, email_config.sender_password)
+            server.sendmail(email_config.sender_email, carrier_email, msg.as_string())
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# ============================================================================
+# TRADINGVIEW WEBHOOK ENDPOINT
+# ============================================================================
+
+class TradingViewAlert(BaseModel):
+    symbol:   str
+    price:    Optional[float] = None
+    action:   Optional[str]  = None      # BUY / SELL / ALERT
+    strategy: Optional[str]  = None
+    interval: Optional[str]  = None
+    message:  Optional[str]  = None
+    time:     Optional[str]  = None
+
+
+@app.post("/api/webhook/tradingview")
+async def tradingview_webhook(alert: TradingViewAlert):
+    """
+    Receives TradingView alert webhooks and fans out to:
+    - Telegram message
+    - Email-to-SMS (free via carrier gateway)
+    - Email notification
+    - Supabase log
+    """
+    emoji  = "🟢" if alert.action == "BUY" else "🔴" if alert.action == "SELL" else "🔔"
+    price_str = f"${alert.price:.2f}" if alert.price else "N/A"
+    telegram_msg = (
+        f"{emoji} <b>TradingView Alert</b>\n"
+        f"Symbol:   <b>{alert.symbol}</b>\n"
+        f"Action:   <b>{alert.action or 'ALERT'}</b>\n"
+        f"Price:    <b>{price_str}</b>\n"
+        f"Strategy: {alert.strategy or 'N/A'}\n"
+        f"Interval: {alert.interval or 'N/A'}\n"
+        f"Time:     {alert.time or datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
+    )
+
+    results = {}
+
+    # 1. Telegram
+    results["telegram"] = await send_telegram(telegram_msg)
+
+    # 2. Free SMS via carrier email gateway (set CARRIER_SMS_EMAIL in Railway)
+    carrier_email = os.getenv("CARRIER_SMS_EMAIL", "")
+    if carrier_email:
+        sms_text = f"{emoji} {alert.action or 'ALERT'} {alert.symbol} @ {price_str}"
+        email_cfg = EmailConfig()
+        results["sms"] = await send_sms_via_email(sms_text, carrier_email, email_cfg)
+
+    # 3. Log to Supabase
+    try:
+        supabase_url = os.getenv("SUPABASE_URL", "")
+        supabase_key = os.getenv("SUPABASE_ANON_KEY", "")
+        if supabase_url and supabase_key:
+            async with httpx.AsyncClient(timeout=5) as client:
+                await client.post(
+                    f"{supabase_url}/rest/v1/tradingview_alerts",
+                    headers={"apikey": supabase_key, "Authorization": f"Bearer {supabase_key}",
+                             "Content-Type": "application/json", "Prefer": "return=minimal"},
+                    json={
+                        "symbol":   alert.symbol,
+                        "action":   alert.action,
+                        "price":    alert.price,
+                        "strategy": alert.strategy,
+                        "interval": alert.interval,
+                        "message":  alert.message,
+                        "triggered_at": datetime.utcnow().isoformat()
+                    }
+                )
+            results["supabase"] = {"success": True}
+    except Exception as e:
+        results["supabase"] = {"success": False, "error": str(e)}
+
+    return {
+        "status": "ok",
+        "alert": alert.dict(),
+        "notifications": results
+    }
+
+
+@app.get("/api/webhook/test")
+async def test_webhook():
+    """Test Telegram and SMS are configured correctly."""
+    tg = await send_telegram("✅ <b>Test</b> — TradingView webhook connected!")
+    return {"telegram": tg, "carrier_sms_email": bool(os.getenv("CARRIER_SMS_EMAIL"))}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
