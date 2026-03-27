@@ -178,7 +178,7 @@ const BacktestChart = () => {
     try {
       setIsLoading(true);
       
-      const response = await fetch(`${API_BASE_URL}/api/backtest', {
+      const response = await fetch(`${API_BASE_URL}/api/backtest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

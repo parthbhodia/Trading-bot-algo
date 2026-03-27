@@ -246,7 +246,7 @@ const Dashboard = () => {
     setAddPosLoading(true);
     setAddPosError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/portfolio/positions', {
+      const res = await fetch(`${API_BASE_URL}/api/portfolio/positions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ positions: buildPositionsPayload(newPos) }),
@@ -267,7 +267,7 @@ const Dashboard = () => {
 
   const handleRemovePosition = async (symbol) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/portfolio/positions', {
+      const res = await fetch(`${API_BASE_URL}/api/portfolio/positions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ positions: buildPositionsPayload(null, symbol) }),
@@ -294,7 +294,7 @@ const Dashboard = () => {
           positions[p.symbol] = { shares: p.shares, avg_cost: p.avgCost };
         }
       });
-      const res = await fetch(`${API_BASE_URL}/api/portfolio/positions', {
+      const res = await fetch(`${API_BASE_URL}/api/portfolio/positions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ positions }),
