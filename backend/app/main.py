@@ -3113,13 +3113,19 @@ async def send_sms_via_email(message: str, carrier_email: str, email_config: Ema
 # ============================================================================
 
 class TradingViewAlert(BaseModel):
-    symbol:   Optional[str]  = None
+    symbol:   Optional[str]   = None
     price:    Optional[float] = None
-    action:   Optional[str]  = None      # BUY / SELL / ALERT
-    strategy: Optional[str]  = None
-    interval: Optional[str]  = None
-    message:  Optional[str]  = None
-    time:     Optional[str]  = None
+    action:   Optional[str]   = None
+    strategy: Optional[str]   = None
+    interval: Optional[str]   = None
+    message:  Optional[str]   = None
+    time:     Optional[str]   = None
+    title:    Optional[str]   = None
+    exchange: Optional[str]   = None
+    open:     Optional[float] = None
+    high:     Optional[float] = None
+    low:      Optional[float] = None
+    volume:   Optional[float] = None
 
 
 @app.post("/api/webhook/tradingview")
@@ -3154,12 +3160,16 @@ async def tradingview_webhook(request: Request):
     emoji  = "🟢" if alert.action == "BUY" else "🔴" if alert.action == "SELL" else "🔔"
     price_str = f"${alert.price:.2f}" if alert.price else "N/A"
     telegram_msg = (
-        f"{emoji} <b>TradingView Alert</b>\n"
-        f"Symbol:   <b>{alert.symbol}</b>\n"
+        f"{emoji} <b>{alert.title or 'TradingView Alert'}</b>\n\n"
+        f"📊 <b>{alert.symbol}</b> · {alert.exchange or ''} · {alert.interval or 'N/A'}\n"
         f"Action:   <b>{alert.action or 'ALERT'}</b>\n"
         f"Price:    <b>{price_str}</b>\n"
+    )
+    if alert.open:  telegram_msg += f"Open:     ${alert.open:.2f}\n"
+    if alert.high:  telegram_msg += f"High:     ${alert.high:.2f}\n"
+    if alert.low:   telegram_msg += f"Low:      ${alert.low:.2f}\n"
+    telegram_msg += (
         f"Strategy: {alert.strategy or 'N/A'}\n"
-        f"Interval: {alert.interval or 'N/A'}\n"
         f"Time:     {alert.time or datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
     )
 
